@@ -7,9 +7,11 @@ import csv
 import glob
 import json
 
+
 def sanitize_name(name):
     """Replace invalid characters in strain names with dashes."""
     return "".join(c if c.isalnum() else "-" for c in name)
+
 
 def process_tsv(input_file):
     """Process the TSV file and group genome IDs by strain."""
@@ -43,24 +45,24 @@ def fetch_h5n1_genomes(output_tsv, date):
 
     try:
         result = subprocess.run(command, check=True, text=True, capture_output=True)
-        
+
         # Write output to file
         with open(output_tsv, "w", encoding="utf-8") as outfile:
             outfile.write(result.stdout)
 
         total_ids = result.stdout.strip().count("\n")
-        
+
         print(f"Genome data saved to {output_tsv}")
         print(f"Total genome IDs fetched: {total_ids}")
     except subprocess.CalledProcessError as e:
-        print(f"Error fetching genomes: {e}")        
+        print(f"Error fetching genomes: {e}")
 
 
 def download_and_save_fasta(strain_data, failed_strains_file, work_dir):
     """Download FASTA sequences, reformat headers, and save to strain-specific files."""
     failed_strains = []  # Keep track of strains that don't have all 8 segments
     genotype_results = {}
-    
+
     for sanitized_strain, entries in strain_data.items():
         # Group by segment and check if all 8 segments are present
         segment_count = len(set(segment for _, _, segment in entries))  # Count unique segments
@@ -70,7 +72,7 @@ def download_and_save_fasta(strain_data, failed_strains_file, work_dir):
             entries.sort(key=lambda x: x[2])  # Sort by segment
             fasta_name = f"{sanitized_strain}.fasta"
             fasta_file = os.path.join(work_dir, fasta_name)
-            
+
             with open(fasta_file, 'w', encoding='utf-8') as fasta_out:
                 for genome_id, strain, segment in entries:
                     print(f"Processing: genome_id={genome_id}, strain={strain}, segment={segment}")
@@ -95,7 +97,6 @@ def download_and_save_fasta(strain_data, failed_strains_file, work_dir):
                         fasta_out.write(reformatted_fasta + "\n")
                     except subprocess.CalledProcessError as e:
                         print(f"Error processing genome_id={genome_id}: {e.stderr}")
-           
 
             try:
                 print(f"Running genoflu.py for {fasta_file}")
@@ -115,7 +116,7 @@ def download_and_save_fasta(strain_data, failed_strains_file, work_dir):
                     with open(genoflu_tsv_file, newline='', encoding='utf-8') as genoflu_out:
                         genoflu_reader = csv.DictReader(genoflu_out, delimiter='\t')
                         for row in genoflu_reader:
-                            genotype_results[sanitized_strain] = row['Genotype'] 
+                            genotype_results[sanitized_strain] = row['Genotype']
                             break  # Process only the first line of the result
                 else:
                     print(f"No stats file found for strain: {sanitized_strain}")
@@ -123,7 +124,7 @@ def download_and_save_fasta(strain_data, failed_strains_file, work_dir):
                 print(f"Error running genoflu.py for {fasta_file}: {e.stderr}")
         else:
             failed_strains.append(sanitized_strain)  # Add to failed strains list
-    
+
     # Write the failed strains to the log file
     if failed_strains:
         with open(failed_strains_file, 'w', encoding='utf-8') as f:
@@ -159,7 +160,7 @@ def add_genotype_to_json(input_file, genotype_results, output_file):
                 if subclade and not subclade.startswith("Not assigned"):
                     genome_data.append({
                         "genome_id": row['genome.genome_id'],
-                        "subclade": {"set": subclade} 
+                        "subclade": {"set": subclade}
                     })
                 else:
                     missing_strains += 1
@@ -198,4 +199,3 @@ if __name__ == "__main__":
         print(f"Final output with genotypes saved to {genotypes_file}")
     else:
         print(f"There is no new data to be processed")
-
