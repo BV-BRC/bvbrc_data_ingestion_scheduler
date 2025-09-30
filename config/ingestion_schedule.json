@@ -1,0 +1,43 @@
+{
+  "settings": {
+    "commit_solr": false
+  },
+  "scripts": {
+    "subspecies_classification": {
+      "disabled": false,
+      "script_file": "process_subspecies_classification.pl",
+      "last_run": "2025-09-25",
+      "interval_days": 1,
+      "solr_update": [
+        {
+          "core_name": "genome",
+          "key": "genome_id",
+          "fields": [
+            "clade",
+            "h1_clade_global",
+            "h1_clade_us",
+            "h3_clade",
+            "h5_clade",
+            "subtype"
+          ]
+        }
+      ]
+    },
+    "genoflu": {
+      "disabled": false,
+      "script_file": "process_genoflu_subclade.py",
+      "last_run": "2025-09-30",
+      "interval_days": 7,
+      "force_run": false,
+      "solr_update": [
+        {
+          "core_name": "genome",
+          "key": "genome_id",
+          "fields": [
+            "subclade"
+          ]
+        }
+      ]
+    }
+  }
+}
