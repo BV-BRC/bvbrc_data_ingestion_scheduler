@@ -87,7 +87,7 @@ exit 0;
 
 # Download genome data based on date
 sub download_data {
-    my $download_status;
+    my $download_status = 0;
     foreach my $type (keys %types) {
         print STDOUT "Downloading genomes ${type} ids.\n";
 
@@ -119,7 +119,7 @@ sub download_data {
         close $out_fh;
         print STDOUT "Downloaded genomes ${type} ids.\n";
 
-        $download_status = process_id_file($id_file, $type, $fasta_file);
+        $download_status ||= process_id_file($id_file, $type, $fasta_file);
     }
     return $download_status;
 }
@@ -157,7 +157,7 @@ sub process_id_file {
     close $fh;
     close $fasta_out_fh;
 
-    print STDOUT "Download genomes ${type} fasta.\n";
+    print STDOUT "Downloaded genomes ${type} fasta.\n";
     return 1;
 }
 
