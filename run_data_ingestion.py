@@ -349,14 +349,18 @@ def main() -> None:
                 allowed_fields = update_conf.get("fields", [])
                 docs = validate_solr_update_file(update_file, allowed_fields, unique_key)
 
-                core_name = update_conf["core_name"]
-                logging.info(f"Processing backup before updating {core_name} core.")
-                ids = [doc[unique_key] for doc in docs if unique_key in doc]
+                if not docs:
+                    logging.info(f"No documents found in update file {update_file}, skipping backup and commit.")
+                    update_file = None
+                else:
+                    core_name = update_conf["core_name"]
+                    logging.info(f"Processing backup before updating {core_name} core.")
+                    ids = [doc[unique_key] for doc in docs if unique_key in doc]
 
-                today = run_time.strftime("%Y-%m-%d")
-                backup_dir = create_backup_dir(today, script_name)
-                backup_file = backup_dir / f"{script_name}_backup.json"
-                backup_solr_docs(backup_file, core_name, unique_key, ids)
+                    today = run_time.strftime("%Y-%m-%d")
+                    backup_dir = create_backup_dir(today, script_name)
+                    backup_file = backup_dir / f"{script_name}_backup.json"
+                    backup_solr_docs(backup_file, core_name, unique_key, ids)
 
             if not (insert_file or update_file):
                 logging.info(f"{script_name} didn't generate output files.")
@@ -395,4 +399,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
